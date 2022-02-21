@@ -1,9 +1,6 @@
-# %%
+d# %%
 # competition associated with ML tutorial
 # https://www.kaggle.com/c/home-data-for-ml-course/overview
-
-import os
-os.chdir(os.path.dirname(os.getcwd())) # make directory one step up the current directory
 
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split

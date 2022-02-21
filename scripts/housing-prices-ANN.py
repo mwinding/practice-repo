@@ -2,9 +2,6 @@
 # competition associated with ML tutorial; model made using tensorflow
 # https://www.kaggle.com/c/home-data-for-ml-course/overview
 
-import os
-os.chdir(os.path.dirname(os.getcwd())) # make directory one step up the current directory
-
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.callbacks import EarlyStopping
