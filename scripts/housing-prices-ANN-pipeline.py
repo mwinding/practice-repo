@@ -7,7 +7,6 @@
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.callbacks import EarlyStopping
-from scikeras.wrappers import KerasRegressor
 
 from sklearn.preprocessing import StandardScaler, OneHotEncoder, OrdinalEncoder
 from sklearn.impute import SimpleImputer
@@ -38,6 +37,14 @@ X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.25, rand
 # %%
 # preprocessing steps
 
+# if different encoding is wanted for high vs low cardinality categorical columns
+'''
+cat_low_card_cols = [cname for cname in X_train.columns if X_train[cname].nunique() < 10 and 
+                        X_train[cname].dtype == 'object']
+cat_high_card_cols = [cname for cname in X_train.columns if X_train[cname].nunique() >= 10 and 
+                        X_train[cname].dtype == 'object']
+'''
+
 # Imputer fills empty values, standardscaler scales values from [0,1]
 numerical_transformer = Pipeline(steps=[
     ('Imputer', SimpleImputer(strategy='most_frequent')),
@@ -63,26 +70,25 @@ test_data_processed = pd.DataFrame(preprocessor.transform(test_data), index = te
 # %%
 # set up model architecture
 
-def generate_model():
-    input_shape = [len(X_train_processed.columns)]
+input_shape = [len(X_train_processed.columns)]
 
-    model = keras.Sequential([
-        layers.Dense(512, activation='relu', input_shape=input_shape),
-        layers.Dropout(0.35),
-        layers.Dense(512, activation='relu'),
-        layers.Dropout(0.35),
-        layers.Dense(512, activation='relu'),
-        layers.Dense(1)
-    ])
+model = keras.Sequential([
+    layers.Dense(512, activation='relu', input_shape=input_shape),
+    layers.Dropout(0.35),
+    layers.Dense(512, activation='relu'),
+    layers.Dropout(0.35),
+    layers.Dense(512, activation='relu'),
+    layers.Dense(1)
+])
 
-    # compile models
-    model.compile(
-        optimizer = 'adam',
-        loss = 'mae'
-    )
+# compile models
+model.compile(
+    optimizer = 'adam',
+    loss = 'mae'
+)
 
-    return(model)
-
+# %%
+# fit model
 batch_size = 256
 epochs = 400
 
@@ -91,29 +97,6 @@ early_stopping = EarlyStopping(
     patience=30, 
     restore_best_weights=True,
 )
-
-
-# %%
-# set up pipeline and run
-from sklearn.metrics import mean_absolute_error
-
-## SOME ISSUE HERE
-model = KerasRegressor(model=generate_model, epochs=epochs, batch_size=batch_size, callbacks=[early_stopping])
-
-keras_pipeline = Pipeline(steps=[
-    ('preprocessor', preprocessor),
-    ('model', model)
-])
-
-keras_pipeline.fit(X_train, y_train)
-preds = keras_pipeline.predict(X_valid)
-mae = mean_absolute_error(y_valid, preds)
-print(mae)
-
-# %%
-# fit model
-
-model = generate_model()
 
 history = model.fit(
     X_train_processed, y_train,
